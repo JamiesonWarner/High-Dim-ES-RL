@@ -13,7 +13,7 @@ ES
 
 import numpy as np
 from multiprocessing.dummy import Pool
-from base import BaseOptimizer
+from .base import BaseOptimizer
 
 
 class LMMAES(BaseOptimizer):
@@ -31,26 +31,26 @@ class LMMAES(BaseOptimizer):
         '''Initialization of the LMMAES
 
 Args:
-        y0 (numpy.ndarray): 
+        y0 (numpy.ndarray):
                 Initial candidate solution. A numpy array of dimension n.
                 Optimum should not be more distant than 3*step_size.
 
-        sigma (float): 
+        sigma (float):
                 Global step size or mutation strength.
 
-        f (function): 
+        f (function):
                 Fitness function, taking a candidate as input.
 
-        function_budget (int, optional): 
+        function_budget (int, optional):
                 Maximum number of function evaluations. Defaults to 10000.
                 If function_budget and function_target are not specified the
                 algorithm	does not terminate automatically.
 
-        function_target (numeric, optional): 
+        function_target (numeric, optional):
                 Target function value f(y*). If function_budget and function_target
                 are not specified the algorithm	does not terminate automatically.
 
-                rng (class instance, optional): 
+                rng (class instance, optional):
                         Random number generator similar to numpy's np.random.RandomState().
                         Requires at least a method similar to np.randn.
 
@@ -59,8 +59,8 @@ Args:
 
         lmbd (int, optional):
                 Number of evolution paths, the rank of the covariance
-                matrix approximation. The value is tied to the number of 
-                selected candidates by self.mu = self.lmbd//2, as well as 
+                matrix approximation. The value is tied to the number of
+                selected candidates by self.mu = self.lmbd//2, as well as
                 equal to the number of candidates self.m.
                 Setting this manually might offset some constants.
 '''
@@ -197,26 +197,26 @@ class MAES(BaseOptimizer):
         '''Initialization of the LMMAES
 
 Args:
-        y0 (numpy.ndarray): 
+        y0 (numpy.ndarray):
                 Initial candidate solution. A numpy array of dimension n.
                 Optimum should not be more distant than 3*step_size.
 
-        sigma (float): 
+        sigma (float):
                 Global step size or mutation strength.
 
-        f (function): 
+        f (function):
                 Fitness function, taking a candidate as input.
 
-        function_budget (int, optional): 
+        function_budget (int, optional):
                 Maximum number of function evaluations. Defaults to 10000.
                 If function_budget and function_target are not specified the
                 algorithm	does not terminate automatically.
 
-        function_target (numeric, optional): 
+        function_target (numeric, optional):
                 Target function value f(y*). If function_budget and function_target
                 are not specified the algorithm	does not terminate automatically.
 
-        rng (class instance, optional): 
+        rng (class instance, optional):
                 Random number generator similar to numpy's np.random.RandomState().
                 Requires at least a method similar to np.randn.
 
@@ -225,8 +225,8 @@ Args:
 
         lmbd (int, optional):
                 Number of evolution paths, the rank of the covariance
-                matrix approximation. The value is tied to the number of 
-                selected candidates by self.mu = self.lmbd//2, as well as 
+                matrix approximation. The value is tied to the number of
+                selected candidates by self.mu = self.lmbd//2, as well as
                 equal to the number of candidates self.m.
                 Setting this manually might offset some constants.
 '''
@@ -358,26 +358,26 @@ class ES(BaseOptimizer):
         '''Initialization of the ES.
 
 Args:
-        y0 (numpy.ndarray): 
+        y0 (numpy.ndarray):
                 Initial candidate solution. A numpy array of dimension n.
                 Optimum should not be more distant than 3*step_size.
 
-        sigma (float): 
+        sigma (float):
                 Global step size or mutation strength.
 
-        f (function): 
+        f (function):
                 Fitness function, taking a candidate as input.
 
-        function_budget (int, optional): 
+        function_budget (int, optional):
                 Maximum number of function evaluations. Defaults to 10000.
                 If function_budget and function_target are not specified the
                 algorithm	does not terminate automatically.
 
-        function_target (numeric, optional): 
+        function_target (numeric, optional):
                 Target function value f(y*). If function_budget and function_target
                 are not specified the algorithm	does not terminate automatically.
 
-        rng (class instance, optional): 
+        rng (class instance, optional):
                 Random number generator similar to numpy's np.random.RandomState().
                 Requires at least a method similar to np.randn.
 

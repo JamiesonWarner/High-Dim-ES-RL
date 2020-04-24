@@ -11,7 +11,7 @@ UHES
 '''
 
 import numpy as np
-from base import BaseOptimizer
+from .base import BaseOptimizer
 from multiprocessing.dummy import Pool
 
 
@@ -58,26 +58,26 @@ class UHLMMAES(BaseOptimizer):
         '''Initialization of the LMMAES
 
         Args:
-            y0 (np.ndarray): 
+            y0 (np.ndarray):
                 Initial candidate solution. A numpy array of dimension n.
                 Optimum should not be more distant than 3*step_size.
 
-            sigma (float): 
+            sigma (float):
                 Global step size or mutation strength.
 
-            f (function): 
+            f (function):
                 Fitness function, taking a candidate as input.
 
-            function_budget (int, optional): 
+            function_budget (int, optional):
                 Maximum number of function evaluations. Defaults to 10000.
                 If function_budget and function_target are not specified the
                 algorithm    does not terminate automatically.
 
-            function_target (numeric, optional): 
+            function_target (numeric, optional):
                 Target function value f(y*). If function_budget and function_target
                 are not specified the algorithm    does not terminate automatically.
 
-            rng (class instance, optional): 
+            rng (class instance, optional):
                 Random number generator similar to numpy's np.random.RandomState().
                 Requires at least methods similar to np.randn and np.randint.
 
@@ -86,8 +86,8 @@ class UHLMMAES(BaseOptimizer):
 
             lmbd (int, optional):
                 Number of evolution paths, the rank of the covariance
-                matrix approximation. The value is tied to the number of 
-                selected candidates by self.mu = self.lmbd//2, as well as 
+                matrix approximation. The value is tied to the number of
+                selected candidates by self.mu = self.lmbd//2, as well as
                 equal to the number of candidates self.m.
                 Setting this manually might offset some constants.
         '''
@@ -139,7 +139,7 @@ class UHLMMAES(BaseOptimizer):
         self.M = np.zeros((self.m,self.n))
 
         # useful values
-        self.c_sigma_update = np.sqrt( self.mu_w*self.c_sigma*(2-self.c_sigma) ) 
+        self.c_sigma_update = np.sqrt( self.mu_w*self.c_sigma*(2-self.c_sigma) )
         self.c_c_update = np.sqrt( self.mu_w*self.c_c*(2-self.c_c) )
         self.fd = np.zeros((self.lmbd,))
 
@@ -184,7 +184,7 @@ class UHLMMAES(BaseOptimizer):
             # if budget is reached return parent
             return self.function_evals, self.y, 'B'
 
-        if self.function_target!=None:            
+        if self.function_target!=None:
             if self.reachedFunctionTarget(self.function_target, np.mean(self.fd)):
                 # if function target is reach return population expected value
                 return self.function_evals, self.y , 'T'
@@ -281,26 +281,26 @@ class UHES(BaseOptimizer):
         '''Initialization of UH-ES.
 
         Args:
-            y0 (numpy.ndarray): 
+            y0 (numpy.ndarray):
                 Initial candidate solution. A numpy array of dimension n.
                 Optimum should not be more distant than 3*step_size.
 
-            sigma (float): 
+            sigma (float):
                 Global step size or mutation strength.
 
-            f (function): 
+            f (function):
                 Fitness function, taking a candidate as input.
 
-            function_budget (int, optional): 
+            function_budget (int, optional):
                 Maximum number of function evaluations. Defaults to 10000.
                 If function_budget and function_target are not specified the
                 algorithm    does not terminate automatically.
 
-            function_target (numeric, optional): 
+            function_target (numeric, optional):
                 Target function value f(y*). If function_budget and function_target
                 are not specified the algorithm    does not terminate automatically.
 
-            rng (class instance, optional): 
+            rng (class instance, optional):
                 Random number generator similar to numpy's np.random.RandomState().
                 Requires at least methods similar to np.randn and np.randint.
 
@@ -342,7 +342,7 @@ class UHES(BaseOptimizer):
         self.p_sigma = np.zeros((self.n,))
 
         # useful values
-        self.c_sigma_update = np.sqrt( self.mu_w*self.c_sigma*(2-self.c_sigma) ) 
+        self.c_sigma_update = np.sqrt( self.mu_w*self.c_sigma*(2-self.c_sigma) )
         self.fd = np.zeros((self.lmbd,))
 
         # deviation from the paper
@@ -381,7 +381,7 @@ class UHES(BaseOptimizer):
             # if budget is reached return parent
             return self.function_evals, self.y, 'B'
 
-        if self.function_target!=None:                
+        if self.function_target!=None:
             if self.reachedFunctionTarget(self.function_target, np.mean(self.fd)):
                 # if function target is reach return population expected value
                 return self.function_evals, self.y , 'T'
@@ -442,7 +442,7 @@ class UHES(BaseOptimizer):
         # update mean
         for i in range(self.mu):
             self.y += self.sigma * self.w[i] * self.z[self.order[i],:]
-        
+
         # compute weighted mean
         self.wz = 0
         for i in range(self.mu):
