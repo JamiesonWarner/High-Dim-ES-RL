@@ -29,15 +29,15 @@ from keras.utils import plot_model
 class Controller(object):
     '''Class for Keras (Tensorflow backend) based OpenAI gym controllers.'''
 
-    def __init__(self, modelFunctionHandle, env,
+    def __init__(self, model_constructor, env,
                  episode_length, device='/cpu:0', render=False,
                  force_action_space=None):
         '''Initialize a controller.
 
         Args:
-            modelFunctionHandle (function):
-                Function that returns a keras model and tensorflow default
-                graph (threading). The function takes the input and output
+            model_constructor (function):
+                Function that returns a keras model.
+                The function takes the input and output
                 dimensions of the keras model as an argument.
             env (str):
                 A OpenAI gym envrionment name.
@@ -60,11 +60,11 @@ class Controller(object):
 
         # get the model
         if type(self.action_space_low) == np.ndarray:
-            self.model, self.graph = modelFunctionHandle(
+            self.model = model_constructor(
                 self.observation_space_low.shape[0], len(self.action_space_low))
         # whenever gym would not work properly, set using additional parameter
         else:
-            self.model, self.graph = modelFunctionHandle(
+            self.model = model_constructor(
                 self.observation_space_low.shape[0], force_action_space)
         self.stacked_weights = self.model.get_weights()
 
@@ -106,10 +106,8 @@ class Controller(object):
 
             # be sure to use preferred device
             with tf.device(self.device):
-                # resolves error in multithreading
-                with self.graph.as_default():
-                    # get controller output
-                    action = self.model.predict(np.array([observation]))
+                # get controller output
+                action = self.model.predict(np.array([observation]))
 
             # convert action to gym format
             action = action_transformations[self.env_name](action)
@@ -133,18 +131,16 @@ class Controller(object):
             flat_weights (numpy.ndarray): A vector of shape (self.n,) holding
                 the weights the controller should be set to.
         '''
-        # resolves threading error
-        with self.graph.as_default():
-            i = 0
-            j = 0
-            # get layer representation
-            for weight_size in self.weight_sizes:
-                self.stacked_weights[j] = np.reshape(
-                    flat_weights[i:i+weight_size[1]], weight_size[0])
-                j += 1
-                i += weight_size[1]
-            # set keras model weights
-            self.model.set_weights(self.stacked_weights)
+        i = 0
+        j = 0
+        # get layer representation
+        for weight_size in self.weight_sizes:
+            self.stacked_weights[j] = np.reshape(
+                flat_weights[i:i+weight_size[1]], weight_size[0])
+            j += 1
+            i += weight_size[1]
+        # set keras model weights
+        self.model.set_weights(self.stacked_weights)
 
     def get_weights(self):
         '''Just a wrapper for the standard methods that returns the
@@ -157,8 +153,7 @@ class Controller(object):
 
 
 class Models(object):
-    '''Container for methods that return a Keras model and the
-    tensorflow default graph.
+    '''Container for methods that return a Keras model.
 
     The method must take the dimensionality of the state space as well
     as the dimensionality of the action space as arguments.
@@ -171,9 +166,7 @@ class Models(object):
         model.add(Dense(output_dim))
         model.add(Activation('sigmoid'))
 
-        # resolves error in multithreading
-        graph = tf.get_default_graph()
-        return model, graph
+        return model
  
     @staticmethod
     def bipedalModel(input_dim, output_dim):
@@ -189,9 +182,7 @@ class Models(object):
         model.add(Dense(output_dim))
         model.add(Activation('sigmoid'))
 
-        # resolves error in multithreading
-        graph = tf.get_default_graph()
-        return model, graph
+        return model
 
     @staticmethod
     def robopongModel(input_dim, output_dim):
@@ -207,8 +198,7 @@ class Models(object):
         model.add(Dense(output_dim))
         model.add(Activation('sigmoid'))
 
-        graph=tf.get_default_graph()
-        return model, graph
+        return model
 
     @staticmethod
     def acrobotModel(input_dim, output_dim):
@@ -223,8 +213,7 @@ class Models(object):
         model.add(Dense(output_dim))
         model.add(Activation('sigmoid'))
 
-        graph=tf.get_default_graph()
-        return model, graph
+        return model
 
 
 class ActionTransformations(object):
