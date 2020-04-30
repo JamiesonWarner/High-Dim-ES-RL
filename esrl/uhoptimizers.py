@@ -13,7 +13,7 @@ UHES
 import numpy as np
 from .base import BaseOptimizer
 from multiprocessing.dummy import Pool
-
+import time
 
 class AvWrapper(object):
     '''Callable class for mapping candidate evaluation and averaging.
@@ -53,8 +53,8 @@ class UHLMMAES(BaseOptimizer):
         https://arxiv.org/pdf/1705.06693.pdf
     '''
 
-    def __init__(self, y0, sigma, f, function_budget=10000, function_target=None,
-                 rng=np.random.RandomState(), threads=1, lmbd = None):
+    def __init__(self, y0, sigma, f_map, function_budget=10000, function_target=None,
+                 rng=np.random.RandomState(), lmbd = None):
         '''Initialization of the LMMAES
 
         Args:
@@ -81,9 +81,6 @@ class UHLMMAES(BaseOptimizer):
                 Random number generator similar to numpy's np.random.RandomState().
                 Requires at least methods similar to np.randn and np.randint.
 
-            threads (int, optional):
-                The number of threads to use to evalutate candidates.
-
             lmbd (int, optional):
                 Number of evolution paths, the rank of the covariance
                 matrix approximation. The value is tied to the number of
@@ -101,9 +98,6 @@ class UHLMMAES(BaseOptimizer):
 
         # set random number generator
         self.rng = rng
-
-        # initialize pool
-        self.pool = Pool(threads)
 
         # 1: given
         self.n= len(y0)
@@ -133,7 +127,7 @@ class UHLMMAES(BaseOptimizer):
         # 2: initialize
         self.t = 0
         self.y = y0
-        self.f = f
+        self.f_map = f_map
         self.sigma = sigma
         self.p_sigma = np.zeros((self.n,))
         self.M = np.zeros((self.m,self.n))
@@ -167,18 +161,24 @@ class UHLMMAES(BaseOptimizer):
             Tuple of (function_evals, y, a_flag). a_flag is a letter
             specifying the termination criterion. Either 'B' or 'T'.
         '''
+        t_start = time.time()
         # sample offspring, vectorized version
         self.z = self.rng.randn(self.lmbd, self.n)
         self.d = np.copy(self.z)
         for j in range(min(self.t, self.m)):
             self.d = ((1 - self.c_d[j]) * self.d) + (self.c_d[j] * np.outer(np.dot(self.d, self.M[j,:]), self.M[j,:]))
 
+        self.x = np.repeat(self.y, self.lmbd) + self.sigma * self.d
+
         # evaluate offspring and check stopping criteria
-        self.x = [(self.y + self.sigma * self.d[i,:]) for i in range(self.lmbd)]
+        t_start = time.time()
+        self.fd = self.f_map(self.x)
+        t_duration = time.time() - t_start
+        print(f"[generation] Fitness evaluated {self.lmbd} times in {t_duration} seconds.")
+        # TODO account for averageing
+        # self.pool.map(AvWrapper(self.averaging,self.f), self.x)
 
-        self.fd = self.pool.map(AvWrapper(self.averaging,self.f), self.x)
         self.function_evals += self.lmbd*self.averaging
-
 
         if self.reachedFunctionBudget( self.function_budget, self.function_evals ):
             # if budget is reached return parent
