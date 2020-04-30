@@ -168,57 +168,46 @@ class UHLMMAES(BaseOptimizer):
         for j in range(min(self.t, self.m)):
             self.d = ((1 - self.c_d[j]) * self.d) + (self.c_d[j] * np.outer(np.dot(self.d, self.M[j,:]), self.M[j,:]))
 
-        self.x = np.repeat(self.y, self.lmbd) + self.sigma * self.d
-
-        # evaluate offspring and check stopping criteria
-        t_start = time.time()
-        self.fd = self.f_map(self.x)
-        t_duration = time.time() - t_start
-        print(f"[generation] Fitness evaluated {self.lmbd} times in {t_duration} seconds.")
-        # TODO account for averageing
-        # self.pool.map(AvWrapper(self.averaging,self.f), self.x)
-
-        self.function_evals += self.lmbd*self.averaging
-
-        if self.reachedFunctionBudget( self.function_budget, self.function_evals ):
-            # if budget is reached return parent
-            return self.function_evals, self.y, 'B'
-
-        if self.function_target!=None:
-            if self.reachedFunctionTarget(self.function_target, np.mean(self.fd)):
-                # if function target is reach return population expected value
-                return self.function_evals, self.y , 'T'
-
-
-        # sort by fitness
-        order = np.argsort(self.fd)
+        self.x = [(self.y + self.sigma * self.d[i, :]) for i in range(self.lmbd)]
 
         # uncertainty handling
         self.uncertainty_handling -= 1
-        if self.uncertainty_handling <= 0:
+        update_uncertainty = self.uncertainty_handling <= 0
+        if update_uncertainty:
             # number of generations to wait, limiting the added cost to at most 5% = 2 / 40
             self.uncertainty_handling = int(np.ceil(40 / self.lmbd))
 
             # find two random individuals for re-evaluation
-            fd2 = np.copy(self.fd)
             i1 = self.rng.randint(self.lmbd)
             i2 = self.rng.randint(self.lmbd - 1)
             if i2 >= i1:
                 i2 += 1
 
             # re-evaluate i1
-            z = self.y + self.sigma * self.d[i1,:]
-
-            fd2[i1] = np.median([self.f(z) for _ in range(self.averaging)])
-            self.function_evals += self.averaging
+            x.append(self.y + self.sigma * self.d[i1,:])
 
             # re-evaluate i2
-            z = self.y + self.sigma * self.d[i2,:]
+            x.append(self.y + self.sigma * self.d[i2,:])
 
-            fd2[i2] = np.median([self.f(z) for _ in range(self.averaging)])
-            self.function_evals += self.averaging
+        # evaluate offspring
+        self.x = np.stack(self.x)
+        averaging = np.repeat(self.averaging, self.x.shape[0])
+        t_start = time.time()
+        self.fd = self.f_map(self.x, averaging)
+        t_duration = time.time() - t_start
+        print(f"[generation] Fitness evaluated {self.lmbd} times in {t_duration} seconds.")
+
+        self.function_evals += self.averaging * len(self.fd)
+
+        # uncertainty handling
+        if update_uncertainty:
+            fd2 = np.copy(self.fd[:-2])
+            fd2[i1] = self.fd[-2]
+            fd2[i2] = self.fd[-1]
+            self.fd = self.fd[:-2]
 
             # sort by fitness
+            order = np.argsort(self.fd)
             order2 = np.argsort(fd2)
 
             # rankings
@@ -242,7 +231,21 @@ class UHLMMAES(BaseOptimizer):
             # incorporate additional fitness evaluations
             self.fd[i1] = 0.5 * (self.fd[i1] + fd2[i1])
             self.fd[i2] = 0.5 * (self.fd[i2] + fd2[i2])
-            order = np.argsort(self.fd)
+
+        # sort by fitness
+        order = np.argsort(self.fd)
+
+        # check stopping criteria
+        if self.reachedFunctionBudget( self.function_budget, self.function_evals ):
+            # if budget is reached return parent
+            return self.function_evals, self.y, 'B'
+
+        if self.function_target!=None:
+            if self.reachedFunctionTarget(self.function_target, np.mean(self.fd)):
+                # if function target is reach return population expected value
+                return self.function_evals, self.y , 'T'
+
+
 
         # update mean
         for i in range(self.mu):
