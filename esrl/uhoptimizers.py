@@ -184,10 +184,10 @@ class UHLMMAES(BaseOptimizer):
                 i2 += 1
 
             # re-evaluate i1
-            x.append(self.y + self.sigma * self.d[i1,:])
+            self.x.append(self.y + self.sigma * self.d[i1,:])
 
             # re-evaluate i2
-            x.append(self.y + self.sigma * self.d[i2,:])
+            self.x.append(self.y + self.sigma * self.d[i2,:])
 
         # evaluate offspring
         self.x = np.stack(self.x)
